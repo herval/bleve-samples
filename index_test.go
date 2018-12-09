@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 		&HtmlDocument{
 			Headers:   []string{"header1", "header2"},
 			Body:      "<b>foo bar</b> baz/boz",
-			CreatedAt: time.Date(218, 1, 1, 1, 1, 0, 0, time.UTC),
+			CreatedAt: time.Date(2018, 1, 1, 1, 1, 0, 0, time.UTC),
 			Source:    "trusted_Site",
 			Type:      "html",
 		}); err != nil {
@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 		&HtmlDocument{
 			Headers:   []string{"header1", "header2"},
 			Body:      "<b>foo bar</b> baz/boz",
-			CreatedAt: time.Date(218, 1, 1, 1, 1, 0, 0, time.UTC),
+			CreatedAt: time.Date(2018, 1, 1, 1, 1, 0, 0, time.UTC),
 			Source:    "untrusted_site",
 			Type:      "invalid",
 		}); err != nil {
@@ -112,7 +112,7 @@ func TestHtmlTagsStripped(t *testing.T) {
 
 func TestKeywordsTags(t *testing.T) {
 	res, err := index.Search(&bleve.SearchRequest{
-		Query: bleve.NewPrefixQuery("baz boz"),
+		Query: bleve.NewMatchQuery("baz boz"),
 	});
 	if err != nil {
 		t.Fatal(err)
@@ -125,7 +125,7 @@ func TestKeywordsTags(t *testing.T) {
 
 func TestHtmlTags(t *testing.T) {
 	res, err := index.Search(&bleve.SearchRequest{
-		Query: bleve.NewPrefixQuery("foo bar"),
+		Query: bleve.NewMatchQuery("foo bar"),
 	});
 	if err != nil {
 		t.Fatal(err)
@@ -138,8 +138,8 @@ func TestHtmlTags(t *testing.T) {
 
 func TestTimeSearch(t *testing.T) {
 	true := true
-	t0 := time.Date(218, 1, 1, 1, 0, 0, 0, time.UTC)
-	t1 := time.Date(218, 1, 1, 1, 2, 0, 0, time.UTC)
+	t0 := time.Date(2018, 1, 1, 1, 0, 0, 0, time.UTC)
+	t1 := time.Date(2018, 1, 1, 1, 2, 0, 0, time.UTC)
 	res, err := index.Search(&bleve.SearchRequest{
 		Query: bleve.NewDateRangeInclusiveQuery(t0, t1, &true, &true),
 	});

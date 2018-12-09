@@ -3,7 +3,12 @@ package bleve_samples
 import (
 	"fmt"
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/analysis/analyzer/custom"
 	"github.com/blevesearch/bleve/analysis/analyzer/simple"
+	"github.com/blevesearch/bleve/analysis/analyzer/web"
+	"github.com/blevesearch/bleve/analysis/char/html"
+	"github.com/blevesearch/bleve/analysis/token/camelcase"
+	"github.com/blevesearch/bleve/analysis/token/lowercase"
 	"os"
 	"time"
 )
@@ -32,6 +37,15 @@ func NewIndex(version string) (bleve.Index, error) {
 
 	// Body field should strip html tags
 	htmlStripped := bleve.NewTextFieldMapping()
+	if err = mapping.AddCustomAnalyzer("htmlAnalyser", map[string]interface{}{
+		"type":          custom.Name,
+		"char_filters":  []string{html.Name},
+		"tokenizer":     web.Name,
+		"token_filters": []string{lowercase.Name, camelcase.Name},
+	}); err != nil {
+		return nil, err
+	}
+	htmlStripped.Analyzer = "htmlAnalyser"
 	htmlDocMapping.AddFieldMappingsAt("Body", htmlStripped)
 
 	// CreatedAt field should be searchable by time ranges
