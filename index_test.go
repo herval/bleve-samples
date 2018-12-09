@@ -125,7 +125,7 @@ func TestKeywordsTags(t *testing.T) {
 
 func TestHtmlTags(t *testing.T) {
 	res, err := index.Search(&bleve.SearchRequest{
-		Query: bleve.NewMatchQuery("foo bar"),
+		Query: bleve.NewMatchQuery("foo bar baz"),
 	});
 	if err != nil {
 		t.Fatal(err)
