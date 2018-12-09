@@ -18,11 +18,26 @@ func TestMain(m *testing.M) {
 	}
 
 	// sample content
-	if err := i.Index("prefixed content",
+	if err := i.Index("content 1",
 		&HtmlDocument{
 			Headers:   []string{"header1", "header2"},
 			Body:      "<b>foo bar</b> baz/boz",
 			CreatedAt: time.Date(218, 1, 1, 1, 1, 0, 0, time.UTC),
+			Source:    "trusted_Site",
+			Type:      "html",
+		}); err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	// this should not be searchable because the type is not valid
+	if err := i.Index("content 2",
+		&HtmlDocument{
+			Headers:   []string{"header1", "header2"},
+			Body:      "<b>foo bar</b> baz/boz",
+			CreatedAt: time.Date(218, 1, 1, 1, 1, 0, 0, time.UTC),
+			Source:    "untrusted_site",
+			Type:      "invalid",
 		}); err != nil {
 		log.Fatal(err)
 		return
@@ -31,6 +46,55 @@ func TestMain(m *testing.M) {
 	index = i
 	m.Run()
 	_ = index.Close()
+}
+
+func TestExactMatchUnsearchableDoc(t *testing.T) {
+	q := bleve.NewMatchQuery("untrusted_site")
+	q.SetField("Source")
+
+	res, err := index.Search(&bleve.SearchRequest{
+		Query: q,
+	});
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Total != 0 {
+		t.Fatal("expected to find no document, found: ", res)
+	}
+}
+
+func TestExactMatch(t *testing.T) {
+	// match Source because it's stored as lowercase and the search is normalized to lowercase too
+	q := bleve.NewMatchQuery("Trusted_site")
+	q.SetField("Source")
+
+	res, err := index.Search(&bleve.SearchRequest{
+		Query: q,
+	});
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Total != 1 {
+		t.Fatal("expected to find one document, found: ", res)
+	}
+}
+
+func TestNoExactMatch(t *testing.T) {
+	q := bleve.NewMatchQuery("trusted_sit")
+	q.SetField("Source")
+
+	res, err := index.Search(&bleve.SearchRequest{
+		Query: q,
+	});
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if res.Total != 1 {
+		t.Fatal("expected to find no document, found: ", res)
+	}
 }
 
 func TestHtmlTagsStripped(t *testing.T) {
